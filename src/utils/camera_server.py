@@ -41,7 +41,7 @@ class CameraServer:
         return frame
 
     def displayImage(self, image):
-        image = cv2.flip(image, -1)
+        # image = cv2.flip(image, -1)
         cv2.imshow("frame", image)
 
         return cv2.waitKey(1) != ord('q')

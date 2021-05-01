@@ -1,11 +1,13 @@
-#/usr/bin/env python3
+#!/usr/bin/env python3
 
 import cv2
 from cv2 import aruco
 import numpy as np
 from math import cos, sin, atan, atan2
 from utils import *
-
+# from autonomous_car_model.srv import car_pose
+from autonomous_car_model.msg import CarPose
+import rospy
 
 class Aruco:
     def __init__(self):
@@ -21,7 +23,11 @@ class Aruco:
         #test
         self.cameraClient = CameraClient()
         self.cameraClient.connect()
-        
+
+        rospy.init_node("aruco_camera")
+        self.pub = rospy.Publisher("aruco_position", CarPose, queue_size = 10)
+        self.rate = rospy.Rate(2)
+        self.carPose = CarPose()
 
     def loadCalibrationMatrixCoef(self):
         f = open("camera_calibration_matrix.csv")
@@ -54,9 +60,11 @@ class Aruco:
 
                     R = cv2.Rodrigues(rvecs)[0]
                     R_inv = np.linalg.inv(R)
-                    camTranslat = np.dot(R_inv, tvecs.reshape(3, 1))
-
-                    print(camTranslat.T)
+                    camTranslat = np.dot(R_inv, tvecs.reshape(3, 1)).reshape(3)
+                    self.carPose.x, self.carPose.y, self.carPose.z = camTranslat[0], camTranslat[1], camTranslat[2]  
+                    print(self.carPose.x, self.carPose.y, self.carPose.z)
+                    self.pub.publish(self.carPose)
+                    self.rate.sleep()
 
             # cv2.imshow("frame", frame)
             self.cameraClient.sendFrame(frame)
