@@ -1,0 +1,45 @@
+def get_rotation_matrix(self, angle):
+        rotation_matrix = np.array([ [np.math.cos(angle),-np.math.sin(angle)],
+                                     [np.math.sin(angle), np.math.cos(angle)] ])
+        
+        return rotation_matrix
+
+
+    def step_drive_to_target(self, target_position: GazeboPosition, time_step=0.1, drive_for_nsec = 1, acc = None, max_relative_distance_to_target=1, print_pose=False):
+        self.unpause()
+
+        duration = 0.2
+        acc = 150
+        self.updatePosition()
+        # self.acc = acc if acc is not None else self.acc
+        mem_phi = np.math.atan2((target_position.y-self.position.y), (target_position.x - self.position.x) )
+        mem_angle = 0
+        self.mean_speed = 0
+        self.cpt = 0
+
+        start_time = rospy.get_time()
+        while abs(self.position.get_relative_distance(target_position))>max_relative_distance_to_target and (rospy.get_time() - start_time) < drive_for_nsec:
+            
+            R = self.get_rotation_matrix(self.position.orientation)
+            pose_vector = np.array([[target_position.x - self.position.x], [target_position.y - self.position.y]])
+            pose_vector = np.dot(np.linalg.inv(R), pose_vector)
+            xtc, ytc = pose_vector
+            target_position.orientation = np.math.atan2( (ytc) , (xtc) )
+            
+            # if abs(target_position.orientation - mem_phi)>340/180*np.pi: target_position.orientation*=-1
+            
+            mem_phi = target_position.orientation
+
+
+            angle = target_position.orientation #- self.position.orientation
+            #TODO solution: placer le target dans le repere de la voiture, calculer l'angle relatif et là on tourne 
+            angle = angle/abs(angle) * min(abs(angle*180/np.pi), 30)
+            angle = int(angle)
+            self.setSteeringAngle(angle)
+
+            self.accelerate(acc, duration)
+            rospy.sleep(time_step)
+            self.updatePosition()
+            
+            self.mean_speed += abs(self.speed)
+            self.cpt +=1
