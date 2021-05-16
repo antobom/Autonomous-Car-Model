@@ -80,28 +80,33 @@ class CarControl:
 
     def driveToTarget(self, targetPosition:Position, carPosition:Position):
         R = carPosition.orientation.getRy()
-        pose_vector = np.array([    [targetPosition.x - carPosition.x],
-                                    [targetPosition.y - carPosition.y] ])
+        pose_vector = np.array([    [targetPosition.z - carPosition.z],
+                                    [targetPosition.x - carPosition.x] ])
         pose_vector = np.dot(np.linalg.inv(R), pose_vector)
         angle = atan2(pose_vector[1], pose_vector[0])
-        angle = int(100*(targetPosition.x - carPosition.x))
-        #to change maybe add a gain
+        angle = int(angle* 180 / np.pi)
 
-        self.command_car(angle)
+        self.command_car(steeringAngle = angle)
     
     def command_car(self, steeringAngle = None, speed = None):
-
+        line = ''
         if steeringAngle is not None and type(steeringAngle) == int:
-            steeringAngle = steeringAngle/abs(steeringAngle) * min(abs(steeringAngle), 30)
-            steeringAngle =int(90 + steeringAngle)
-            line = "ser" + str(steeringAngle) + "\n"
+            steeringAngle = 0 if steeringAngle==0 else steeringAngle/abs(steeringAngle) * min(abs(steeringAngle), 30)
+            steeringAngle = int(90 + steeringAngle)
+            line = "ser" + str(steeringAngle) + '\n'
             self.serialArduino.write(line.encode())
-            print(line)
+
 
         if speed is not None and type(speed) == int:
-            time.sleep(0.1)
             line = "mot" + str(speed) + "\n"
             self.serialArduino.write(line.encode())
+
+        rep = self.serialArduino.read_all()
+        time.sleep(0.05)
+        if(len(rep)>0):
+            print(rep)
+        else:print("line: " + line)
+
 
 
 

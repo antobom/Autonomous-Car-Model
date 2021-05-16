@@ -20,4 +20,5 @@ def run():
 
 carControl = CarControl()
 if __name__=="__main__":
+    print("running")
     run()

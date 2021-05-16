@@ -22,14 +22,16 @@ class Aruco:
 
 
         #test
-        self.cameraClient = CameraClient()
-        self.cameraClient.connect()
+        self.connectToServer = False
+        if self.connectToServer:
+            self.cameraClient = CameraClient()
+            self.cameraClient.connect()
 
         rospy.init_node("aruco_camera")
         self.pubPosition = rospy.Publisher("car_position", CarPose, queue_size = 10)
         # self.pubOrientation = rospy.Publisher("car_orientation", CarOrientation, queue_size = 10)
         
-        self.rate = rospy.Rate(8)
+        self.rate = rospy.Rate(5)
         self.carPose = CarPose()
         # self.carOrientation = CarOrientation()
 
@@ -87,10 +89,11 @@ class Aruco:
                     self.pubPosition.publish(self.carPose)
                     # self.pubOrientation.publish (self.carOrientation)
 
-                    self.rate.sleep()
+            self.rate.sleep()
 
             # cv2.imshow("frame", frame)
-            self.cameraClient.sendFrame(frame)
+            if self.connectToServer:
+                self.cameraClient.sendFrame(frame)
             
 
 chdir("/home/pi/Documents/ros_ws/src/autonomous_car_model/src")

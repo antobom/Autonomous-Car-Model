@@ -59,6 +59,9 @@ void loop() {
               steeringAngle = max(steeringAngle, 0);
             servo.write(steeringAngle);
             Serial.println(inString + " steeringAngle: " + String(steeringAngle));
+          } else {
+            Serial.println("command error: ");
+            Serial.println(command);
           }
       }
         
